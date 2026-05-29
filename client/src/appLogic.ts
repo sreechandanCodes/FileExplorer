@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as api from './api';
 import * as navigation from './navigation';
+import { usePathHistory } from './usePathHistory';
 import type {
   NavigationActions,
   Path,
@@ -9,46 +10,21 @@ import type {
 import type { BottomBarStatus, DirectoryContents } from './types';
 
 export function useFileExplorerLogic() {
-  const [pathHistory, setPathHistory] = useState<{ paths: Path[]; index: number }>({
-    paths: ['/'],
-    index: 0,
-  });
+  const {
+    currentPath,
+    navigateToPath,
+    goToNextHistoryEntry,
+    goToPreviousHistoryEntry,
+    canGoNext,
+    canGoPrevious,
+  } = usePathHistory('/');
   const [entries, setEntries] = useState<DirectoryContents>([]);
   const [entriesPath, setEntriesPath] = useState<Path | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isKeyboardHelpOpen, setIsKeyboardHelpOpen] = useState(false);
   const visitedChildByPath = useRef<VisitedChildByPath>({});
   const pendingSelectionPath = useRef<string | null>(null);
-  const currentPath = pathHistory.paths[pathHistory.index];
   const entriesAreCurrent = entriesPath === currentPath;
-
-  const navigateToPath = useCallback((nextPath: Path) => {
-    setPathHistory(prevPathHistory => {
-      if (prevPathHistory.paths[prevPathHistory.index] === nextPath) {
-        return prevPathHistory;
-      }
-
-      const previousPaths = prevPathHistory.paths.slice(0, prevPathHistory.index + 1);
-      return {
-        paths: [...previousPaths, nextPath],
-        index: previousPaths.length,
-      };
-    });
-  }, []);
-
-  const goToPreviousHistoryEntry = useCallback(() => {
-    setPathHistory(prevPathHistory => ({
-      ...prevPathHistory,
-      index: Math.max(prevPathHistory.index - 1, 0),
-    }));
-  }, []);
-
-  const goToNextHistoryEntry = useCallback(() => {
-    setPathHistory(prevPathHistory => ({
-      ...prevPathHistory,
-      index: Math.min(prevPathHistory.index + 1, prevPathHistory.paths.length - 1),
-    }));
-  }, []);
 
   const rememberVisitedChild = useCallback((parentPath: string, childPath: string) => {
     visitedChildByPath.current[parentPath] = childPath;
@@ -248,8 +224,6 @@ export function useFileExplorerLogic() {
   const totalCount = currentEntries.length;
   const folderCount = currentEntries.filter(entry => entry.isDirectory).length;
   const fileCount = totalCount - folderCount;
-  const canGoPrevious = pathHistory.index > 0;
-  const canGoNext = pathHistory.index < pathHistory.paths.length - 1;
   const bottomBarStatus: BottomBarStatus = {
     totalCount,
     currentPosition: totalCount === 0 ? 0 : selectedIndex + 1,
