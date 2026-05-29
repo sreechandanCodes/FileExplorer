@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as api from './api';
 import * as navigation from './navigation';
+import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { usePathHistory } from './usePathHistory';
 import type {
   NavigationActions,
@@ -175,49 +176,10 @@ export function useFileExplorerLogic() {
     rememberVisitedChild(currentPath, selectedEntry.fullPath);
   }, [entries, selectedIndex, currentPath, entriesAreCurrent, rememberVisitedChild]);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (isKeyboardHelpOpen) {
-        return;
-      }
-
-      const target = event.target as HTMLElement | null;
-      if (target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) {
-        return;
-      }
-
-      if (event.altKey && event.key === 'ArrowLeft') {
-        event.preventDefault();
-        nav.goPrevious();
-      } else if (event.altKey && event.key === 'ArrowRight') {
-        event.preventDefault();
-        nav.goNext();
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        nav.goToPreviousSibling();
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        nav.goToNextSibling();
-      } else if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        nav.goToParent();
-      } else if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        if (!nav.goToVisitedChild()) {
-          nav.openSelectedEntry();
-        }
-      } else if (navigation.isJumpKey(event)) {
-        event.preventDefault();
-        nav.jumpToSelectedSymlinkTarget();
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    isKeyboardHelpOpen,
+  useKeyboardNavigation({
+    isDisabled: isKeyboardHelpOpen,
     nav,
-  ]);
+  });
 
   const currentEntries = entriesAreCurrent ? entries : [];
   const selectedEntry = currentEntries[selectedIndex];
