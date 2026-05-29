@@ -8,19 +8,21 @@ import type {
   Path,
   VisitedChildByPath,
 } from './navigation';
-import type { BottomBarStatus, DirectoryContents } from './types';
+import type { BottomBarStatus, DirectoryContents, DirectoryInfo, DirectoryListing } from './types';
 
 export function useFileExplorerLogic() {
   const {
     currentPath,
     navigateToPath,
+    replaceCurrentPath,
     goToNextHistoryEntry,
     goToPreviousHistoryEntry,
     canGoNext,
     canGoPrevious,
-  } = usePathHistory('/');
+  } = usePathHistory();
   const [entries, setEntries] = useState<DirectoryContents>([]);
   const [entriesPath, setEntriesPath] = useState<Path | null>(null);
+  const [directoryInfo, setDirectoryInfo] = useState<DirectoryInfo | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isKeyboardHelpOpen, setIsKeyboardHelpOpen] = useState(false);
   const visitedChildByPath = useRef<VisitedChildByPath>({});
@@ -81,6 +83,7 @@ export function useFileExplorerLogic() {
     goToParent: () => {
       navigation.goToParent({
         currentPath,
+        parentPath: directoryInfo?.parentPath ?? null,
         rememberVisitedChild,
         navigateToDirectoryAndSelect,
       });
@@ -124,6 +127,7 @@ export function useFileExplorerLogic() {
   }), [
     canListPath,
     currentPath,
+    directoryInfo?.parentPath,
     entries,
     entriesAreCurrent,
     getVisitedChild,
@@ -139,13 +143,40 @@ export function useFileExplorerLogic() {
 
   useEffect(() => {
     let isCurrentRequest = true;
-    api.listDirectory(currentPath)
-      .then((data: DirectoryContents) => {
+    if (currentPath) return undefined;
+
+    api.getRootDirectory()
+      .then(rootPath => {
         if (!isCurrentRequest) return;
 
-        const sortedEntries = navigation.sortEntries(data);
+        replaceCurrentPath(rootPath);
+      })
+      .catch(error => {
+        if (!isCurrentRequest) return;
+
+        console.error('Error fetching root path', error);
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [currentPath, replaceCurrentPath]);
+
+  useEffect(() => {
+    let isCurrentRequest = true;
+    if (!currentPath) return undefined;
+
+    api.listDirectory(currentPath)
+      .then((data: DirectoryListing) => {
+        if (!isCurrentRequest) return;
+
+        if (data.path !== currentPath) {
+          replaceCurrentPath(data.path);
+        }
+
+        const sortedEntries = navigation.sortEntries(data.entries);
         const pendingPath = pendingSelectionPath.current;
-        const visitedChildPath = getVisitedChild(currentPath);
+        const visitedChildPath = getVisitedChild(data.path);
         const selectedPath = pendingPath || visitedChildPath;
         const selectedPathIndex = selectedPath
           ? sortedEntries.findIndex(entry => entry.fullPath === selectedPath)
@@ -153,7 +184,13 @@ export function useFileExplorerLogic() {
 
         setEntries(sortedEntries);
         setSelectedIndex(Math.max(selectedPathIndex, 0));
-        setEntriesPath(currentPath);
+        setEntriesPath(data.path);
+        setDirectoryInfo({
+          path: data.path,
+          rootPath: data.rootPath,
+          parentPath: data.parentPath,
+          pathSeparator: data.pathSeparator,
+        });
         pendingSelectionPath.current = null;
       })
       .catch(error => {
@@ -163,13 +200,14 @@ export function useFileExplorerLogic() {
         setEntries([]);
         setSelectedIndex(0);
         setEntriesPath(currentPath);
+        setDirectoryInfo(null);
         pendingSelectionPath.current = null;
       });
 
     return () => {
       isCurrentRequest = false;
     };
-  }, [currentPath, getVisitedChild]);
+  }, [currentPath, getVisitedChild, replaceCurrentPath]);
 
   useEffect(() => {
     if (!entriesAreCurrent) return;
@@ -202,6 +240,7 @@ export function useFileExplorerLogic() {
 
   return {
     currentPath,
+    canGoToParent: Boolean(directoryInfo?.parentPath),
     entries: currentEntries,
     selectedIndex: entriesAreCurrent ? selectedIndex : 0,
     selectedEntry,

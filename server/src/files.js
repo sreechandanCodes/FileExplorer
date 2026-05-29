@@ -35,11 +35,24 @@ const canJumpToSymlinkTarget = async targetPath => {
   return canOpenDirectory(path.dirname(targetPath));
 };
 
-export const getDirectoryContents = async dirPath => {
+const getDirectoryInfo = dirPath => {
+  const resolvedPath = path.resolve(dirPath);
+  const rootPath = path.parse(resolvedPath).root;
+
+  return {
+    path: resolvedPath,
+    rootPath,
+    parentPath: resolvedPath === rootPath ? null : path.dirname(resolvedPath),
+    pathSeparator: path.sep,
+  };
+};
+
+export const getDirectoryListing = async dirPath => {
   try {
-    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const directoryInfo = getDirectoryInfo(dirPath);
+    const entries = await fs.readdir(directoryInfo.path, { withFileTypes: true });
     const results = await asyncMapLimit(entries, DIRECTORY_ENTRY_CONCURRENCY, async (entry) => {
-      const fullPath = path.join(dirPath, entry.name);
+      const fullPath = path.join(directoryInfo.path, entry.name);
       let stats;
       try {
         stats = await fs.lstat(fullPath);
@@ -77,15 +90,20 @@ export const getDirectoryContents = async dirPath => {
         try {
           const realPath = await fs.realpath(fullPath);
           result.linkTarget = realPath;
+          result.linkTargetParentPath = path.dirname(realPath);
           result.canJumpToTarget = await canJumpToSymlinkTarget(realPath);
         } catch (error) {
           result.linkTarget = null; // Broken link
+          result.linkTargetParentPath = null;
           result.canJumpToTarget = false;
         }
       }
       return result;
     });
-    return results.filter(Boolean);
+    return {
+      ...directoryInfo,
+      entries: results.filter(Boolean),
+    };
   } catch (error) {
     return { isError: true, message: error.message };
   }

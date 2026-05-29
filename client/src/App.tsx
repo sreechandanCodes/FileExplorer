@@ -12,6 +12,7 @@ function App() {
     <div className="flex col h-100pc">
       <TopBar
         currentPath={fileExplorer.currentPath}
+        canGoToParent={fileExplorer.canGoToParent}
         canGoNext={fileExplorer.history.canGoNext}
         canGoPrevious={fileExplorer.history.canGoPrevious}
         onGoToParent={fileExplorer.nav.goToParent}

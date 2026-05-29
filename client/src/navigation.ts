@@ -42,16 +42,17 @@ export function openDirectory({
 
 export function goToParent({
   currentPath,
+  parentPath,
   rememberVisitedChild,
   navigateToDirectoryAndSelect,
 }: {
   currentPath: Path;
+  parentPath: Path | null;
   rememberVisitedChild: (parentPath: Path, childPath: Path) => void;
   navigateToDirectoryAndSelect: (directoryPath: Path, entryPath: Path) => void;
 }) {
-  if (currentPath === '/') return;
+  if (!parentPath) return;
 
-  const parentPath = getParentPath(currentPath);
   rememberVisitedChild(parentPath, currentPath);
   navigateToDirectoryAndSelect(parentPath, currentPath);
 }
@@ -192,7 +193,8 @@ async function getSymlinkTargetDestination(
     return { directoryPath: entry.linkTarget };
   }
 
-  const targetParentPath = getParentPath(entry.linkTarget);
+  const targetParentPath = entry.linkTargetParentPath;
+  if (!targetParentPath) return null;
   if (!await canListPath(targetParentPath)) return null;
 
   return {
@@ -214,13 +216,6 @@ export function sortEntries(entries: DirectoryContents) {
 
     return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
   });
-}
-
-export function getParentPath(path: string) {
-  const normalizedPath = path.replace(/\/+$/, '') || '/';
-  if (normalizedPath === '/') return '/';
-
-  return normalizedPath.split('/').slice(0, -1).join('/') || '/';
 }
 
 export function isBrokenSymlink(entry: Entry) {

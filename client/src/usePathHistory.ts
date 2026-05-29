@@ -6,7 +6,7 @@ interface PathHistoryState {
   index: number;
 }
 
-export function usePathHistory(initialPath: Path = '/') {
+export function usePathHistory(initialPath: Path = '') {
   const [pathHistory, setPathHistory] = useState<PathHistoryState>({
     paths: [initialPath],
     index: 0,
@@ -28,6 +28,15 @@ export function usePathHistory(initialPath: Path = '/') {
     });
   }, []);
 
+  const replaceCurrentPath = useCallback((nextPath: Path) => {
+    setPathHistory(prevPathHistory => ({
+      ...prevPathHistory,
+      paths: prevPathHistory.paths.map((path, index) => (
+        index === prevPathHistory.index ? nextPath : path
+      )),
+    }));
+  }, []);
+
   const goToPreviousHistoryEntry = useCallback(() => {
     setPathHistory(prevPathHistory => ({
       ...prevPathHistory,
@@ -45,6 +54,7 @@ export function usePathHistory(initialPath: Path = '/') {
   return {
     currentPath,
     navigateToPath,
+    replaceCurrentPath,
     goToNextHistoryEntry,
     goToPreviousHistoryEntry,
     canGoNext: pathHistory.index < pathHistory.paths.length - 1,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  getParentPath,
+  goToParent,
   jumpToSelectedSymlinkTarget,
   openEntry,
   sortEntries,
@@ -22,14 +22,41 @@ function makeEntry(overrides: Partial<Entry> = {}): Entry {
   };
 }
 
-describe('getParentPath', () => {
-  it('returns root for root and top-level paths', () => {
-    expect(getParentPath('/')).toBe('/');
-    expect(getParentPath('/home')).toBe('/');
+describe('goToParent', () => {
+  it('uses the parent path supplied by the server', () => {
+    const rememberVisitedChild = vi.fn();
+    const navigateToDirectoryAndSelect = vi.fn();
+
+    goToParent({
+      currentPath: 'C:\\Users\\demo\\Documents',
+      parentPath: 'C:\\Users\\demo',
+      rememberVisitedChild,
+      navigateToDirectoryAndSelect,
+    });
+
+    expect(rememberVisitedChild).toHaveBeenCalledWith(
+      'C:\\Users\\demo',
+      'C:\\Users\\demo\\Documents'
+    );
+    expect(navigateToDirectoryAndSelect).toHaveBeenCalledWith(
+      'C:\\Users\\demo',
+      'C:\\Users\\demo\\Documents'
+    );
   });
 
-  it('ignores trailing slashes', () => {
-    expect(getParentPath('/home/user/docs/')).toBe('/home/user');
+  it('does nothing when there is no parent path', () => {
+    const rememberVisitedChild = vi.fn();
+    const navigateToDirectoryAndSelect = vi.fn();
+
+    goToParent({
+      currentPath: 'C:\\',
+      parentPath: null,
+      rememberVisitedChild,
+      navigateToDirectoryAndSelect,
+    });
+
+    expect(rememberVisitedChild).not.toHaveBeenCalled();
+    expect(navigateToDirectoryAndSelect).not.toHaveBeenCalled();
   });
 });
 
@@ -102,6 +129,7 @@ describe('jumpToSelectedSymlinkTarget', () => {
       isSymbolicLink: true,
       canOpen: true,
       linkTarget: '/mnt/shared/report.txt',
+      linkTargetParentPath: '/mnt/shared',
     });
 
     await jumpToSelectedSymlinkTarget({

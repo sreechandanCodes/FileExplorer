@@ -6,6 +6,7 @@ import {
 
 export function TopBar({
   currentPath,
+  canGoToParent,
   canGoNext,
   canGoPrevious,
   onGoToParent,
@@ -13,6 +14,7 @@ export function TopBar({
   onGoPrevious,
 }: {
   currentPath: string;
+  canGoToParent: boolean;
   canGoNext: boolean;
   canGoPrevious: boolean;
   onGoToParent: () => void;
@@ -27,7 +29,7 @@ export function TopBar({
           type="button"
           aria-label="Go to parent directory"
           title="Go to parent directory"
-          disabled={currentPath === '/'}
+          disabled={!canGoToParent}
           onClick={onGoToParent}
         >
           <ParentDirectoryIcon />

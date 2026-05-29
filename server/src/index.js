@@ -21,12 +21,12 @@ app.get("/api/list", async (req, res) => {
     return res.status(400).json({ error: "Path query parameter is required" });
   }
   
-  const contents = await fs.getDirectoryContents(dirPath);
-  if (contents.isError) {
-    return res.status(500).json({ error: contents.message });
+  const listing = await fs.getDirectoryListing(dirPath);
+  if (listing.isError) {
+    return res.status(500).json({ error: listing.message });
   }
   
-  res.json(contents);
+  res.json(listing);
 });
 
 app.get("/api/home", (req, res) => {
