@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import * as api from './api';
 import * as navigation from './navigation';
 import type {
   NavigationActions,
@@ -8,8 +9,6 @@ import type {
 import type { BottomBarStatus, DirectoryContents } from './types';
 
 export function useFileExplorerLogic() {
-  const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api`;
-
   const [pathHistory, setPathHistory] = useState<{ paths: Path[]; index: number }>({
     paths: ['/'],
     index: 0,
@@ -80,13 +79,8 @@ export function useFileExplorerLogic() {
   }, [currentPath, entriesAreCurrent, navigateToPath, selectEntryByPath]);
 
   const canListPath = useCallback(async (path: string) => {
-    try {
-      const response = await fetch(`${apiUrl}/list?path=${encodeURIComponent(path)}`);
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }, [apiUrl]);
+    return api.canListPath(path);
+  }, []);
 
   const openDirectory = useCallback((nextPath: string) => {
     navigation.openDirectory({
@@ -168,8 +162,7 @@ export function useFileExplorerLogic() {
 
   useEffect(() => {
     let isCurrentRequest = true;
-    fetch(`${apiUrl}/list?path=${encodeURIComponent(currentPath)}`)
-      .then(response => response.json())
+    api.listDirectory(currentPath)
       .then((data: DirectoryContents) => {
         if (!isCurrentRequest) return;
 
@@ -195,7 +188,7 @@ export function useFileExplorerLogic() {
     return () => {
       isCurrentRequest = false;
     };
-  }, [apiUrl, currentPath, getVisitedChild]);
+  }, [currentPath, getVisitedChild]);
 
   useEffect(() => {
     if (!entriesAreCurrent) return;
