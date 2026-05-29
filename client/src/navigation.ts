@@ -5,6 +5,10 @@ export type VisitedChildByPath = Record<Path, Path>;
 
 type SetSelectedIndex = (nextIndex: number | ((prevIndex: number) => number)) => void;
 type SetPath = (path: Path) => void;
+type EntryDestination = {
+  directoryPath: Path;
+  selectedEntryPath?: Path;
+};
 
 export interface NavigationActions {
   goToParent: () => void;
@@ -166,16 +170,35 @@ export async function jumpToSelectedSymlinkTarget({
     return;
   }
 
-  if (await canListPath(selectedEntry.linkTarget)) {
-    setCurrentPath(selectedEntry.linkTarget);
+  const destination = await getSymlinkTargetDestination(selectedEntry, canListPath);
+  if (!destination) return;
+
+  if (!destination.selectedEntryPath) {
+    setCurrentPath(destination.directoryPath);
     return;
   }
 
-  const targetParentPath = getParentPath(selectedEntry.linkTarget);
-  if (!await canListPath(targetParentPath)) return;
+  rememberVisitedChild(destination.directoryPath, destination.selectedEntryPath);
+  navigateToDirectoryAndSelect(destination.directoryPath, destination.selectedEntryPath);
+}
 
-  rememberVisitedChild(targetParentPath, selectedEntry.linkTarget);
-  navigateToDirectoryAndSelect(targetParentPath, selectedEntry.linkTarget);
+async function getSymlinkTargetDestination(
+  entry: Entry,
+  canListPath: (path: Path) => Promise<boolean>
+): Promise<EntryDestination | null> {
+  if (!entry.linkTarget) return null;
+
+  if (await canListPath(entry.linkTarget)) {
+    return { directoryPath: entry.linkTarget };
+  }
+
+  const targetParentPath = getParentPath(entry.linkTarget);
+  if (!await canListPath(targetParentPath)) return null;
+
+  return {
+    directoryPath: targetParentPath,
+    selectedEntryPath: entry.linkTarget,
+  };
 }
 
 function getEntrySortGroup(entry: Entry) {
