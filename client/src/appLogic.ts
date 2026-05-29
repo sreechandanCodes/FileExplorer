@@ -160,6 +160,10 @@ export function useFileExplorerLogic() {
         if (!isCurrentRequest) return;
 
         console.error('Error fetching path', error);
+        setEntries([]);
+        setSelectedIndex(0);
+        setEntriesPath(currentPath);
+        pendingSelectionPath.current = null;
       });
 
     return () => {
