@@ -23,7 +23,7 @@ npm install
 cd ..
 ```
 
-## Run
+## Run A Dev Demo
 
 Start the backend in one terminal:
 
@@ -37,6 +37,35 @@ Start the frontend in another terminal:
 ```sh
 cd client
 npm run dev
+```
+
+Open the frontend URL from [filexplorer.config.json](filexplorer.config.json):
+
+```text
+http://localhost:5173
+```
+
+## Run A Production-Style Demo
+
+Build the frontend:
+
+```sh
+cd client
+npm run build
+```
+
+Start the backend in one terminal:
+
+```sh
+cd server
+npm start
+```
+
+Preview the built frontend in another terminal:
+
+```sh
+cd client
+npm run preview
 ```
 
 Open the frontend URL from [filexplorer.config.json](filexplorer.config.json):
@@ -60,7 +89,7 @@ The frontend and backend ports are set in [filexplorer.config.json](filexplorer.
 }
 ```
 
-The backend reads this file at startup. The frontend reads it when Vite starts or builds, then uses `server.port` for API requests and `client.port` for the Vite dev server.
+The backend reads this file at startup. The frontend reads it when Vite starts or builds, then uses `server.port` for API requests and `client.port` for the Vite dev server and preview server.
 
 Most users can leave this alone. If you change the port, restart both the backend and frontend dev servers.
 

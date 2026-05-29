@@ -48,4 +48,8 @@ export default defineConfig({
     port: clientPort,
     strictPort: true,
   },
+  preview: {
+    port: clientPort,
+    strictPort: true,
+  },
 })
