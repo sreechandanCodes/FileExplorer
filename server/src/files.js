@@ -2,11 +2,21 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 
-const asyncMap = async (array, callback) => {
-  const results = [];
-  for (const item of array) {
-    results.push(await callback(item));
-  }
+const DIRECTORY_ENTRY_CONCURRENCY = 32;
+
+const asyncMapLimit = async (array, limit, callback) => {
+  const results = new Array(array.length);
+  let nextIndex = 0;
+
+  const workers = Array.from({ length: Math.min(limit, array.length) }, async () => {
+    while (nextIndex < array.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await callback(array[currentIndex]);
+    }
+  });
+
+  await Promise.all(workers);
   return results;
 };
 
@@ -28,7 +38,7 @@ const canJumpToSymlinkTarget = async targetPath => {
 export const getDirectoryContents = async dirPath => {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
-    const results = await asyncMap(entries, async (entry) => {
+    const results = await asyncMapLimit(entries, DIRECTORY_ENTRY_CONCURRENCY, async (entry) => {
       const fullPath = path.join(dirPath, entry.name);
       let stats;
       try {
@@ -37,7 +47,7 @@ export const getDirectoryContents = async dirPath => {
         return null;
       }
 
-      const result =  {
+      const result = {
         name: entry.name,
         fullPath,
         isDirectory: entry.isDirectory(),
@@ -87,5 +97,4 @@ export const getHomeDirectory = () => {
 
 export const getRootDirectory = () => {
   return path.parse(process.cwd()).root;
-}
-//encodeURIComponent
+};

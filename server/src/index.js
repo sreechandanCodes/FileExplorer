@@ -3,7 +3,7 @@ import cors from "cors";
 import * as fs from "./files.js";
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
@@ -15,13 +15,9 @@ app.get("/api", (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
-
 app.get("/api/list", async (req, res) => {
   const dirPath = req.query.path;
-  if (!dirPath) {
+  if (typeof dirPath !== "string" || dirPath === "") {
     return res.status(400).json({ error: "Path query parameter is required" });
   }
   
@@ -41,4 +37,8 @@ app.get("/api/home", (req, res) => {
 app.get("/api/root", (req, res) => {
   const rootDir = fs.getRootDirectory();
   res.json({ rootDirectory: rootDir });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
 });
