@@ -45,6 +45,22 @@ Open the Vite URL shown in the frontend terminal, usually:
 http://localhost:5173
 ```
 
+## Configuration
+
+The backend port is set in [filexplorer.config.json](filexplorer.config.json):
+
+```json
+{
+  "server": {
+    "port": 3001
+  }
+}
+```
+
+The backend reads this file at startup. The frontend reads it when Vite starts or builds, then uses the same port for API requests.
+
+Most users can leave this alone. If you change the port, restart both the backend and frontend dev servers.
+
 ## Platform Notes
 
 ### Windows
@@ -78,11 +94,11 @@ The details sidebar shows stable metadata first, then conditional details such a
 
 If the frontend cannot load folders, check that:
 
-- the backend is running on `http://localhost:3001`
+- the backend is running on the port from `filexplorer.config.json`
 - the backend terminal does not show an error
-- port `3001` is not already in use by another app
+- the configured port is not already in use by another app
 
-The frontend expects the backend at `http://localhost:3001`.
+By default, the frontend expects the backend at `http://localhost:3001`.
 
 ## Development Checks
 

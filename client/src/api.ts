@@ -1,6 +1,6 @@
 import type { DirectoryListing } from './types';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = __FILE_EXPLORER_API_URL__;
 
 export class ApiError extends Error {
   status: number;
