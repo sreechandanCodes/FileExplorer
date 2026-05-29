@@ -39,7 +39,7 @@ cd client
 npm run dev
 ```
 
-Open the Vite URL shown in the frontend terminal, usually:
+Open the frontend URL from [filexplorer.config.json](filexplorer.config.json):
 
 ```text
 http://localhost:5173
@@ -47,17 +47,20 @@ http://localhost:5173
 
 ## Configuration
 
-The backend port is set in [filexplorer.config.json](filexplorer.config.json):
+The frontend and backend ports are set in [filexplorer.config.json](filexplorer.config.json):
 
 ```json
 {
+  "client": {
+    "port": 5173
+  },
   "server": {
     "port": 3001
   }
 }
 ```
 
-The backend reads this file at startup. The frontend reads it when Vite starts or builds, then uses the same port for API requests.
+The backend reads this file at startup. The frontend reads it when Vite starts or builds, then uses `server.port` for API requests and `client.port` for the Vite dev server.
 
 Most users can leave this alone. If you change the port, restart both the backend and frontend dev servers.
 
@@ -95,10 +98,11 @@ The details sidebar shows stable metadata first, then conditional details such a
 If the frontend cannot load folders, check that:
 
 - the backend is running on the port from `filexplorer.config.json`
+- the frontend is running on the port from `filexplorer.config.json`
 - the backend terminal does not show an error
 - the configured port is not already in use by another app
 
-By default, the frontend expects the backend at `http://localhost:3001`.
+By default, open `http://localhost:5173` and make sure the backend is running at `http://localhost:3001`.
 
 ## Development Checks
 
