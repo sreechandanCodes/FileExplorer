@@ -1,6 +1,6 @@
 import type { DirectoryListing } from './types';
 
-const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api`;
+const API_URL = 'http://localhost:3001/api';
 
 export class ApiError extends Error {
   status: number;
@@ -13,7 +13,7 @@ export class ApiError extends Error {
 }
 
 export async function listDirectory(path: string): Promise<DirectoryListing> {
-  const response = await fetch(`${apiUrl}/list?path=${encodeURIComponent(path)}`);
+  const response = await fetch(`${API_URL}/list?path=${encodeURIComponent(path)}`);
   const data: unknown = await response.json();
 
   if (!response.ok) {
@@ -28,7 +28,7 @@ export async function listDirectory(path: string): Promise<DirectoryListing> {
 }
 
 export async function getRootDirectory() {
-  const response = await fetch(`${apiUrl}/root`);
+  const response = await fetch(`${API_URL}/root`);
   const data: unknown = await response.json();
 
   if (!response.ok) {
@@ -44,7 +44,7 @@ export async function getRootDirectory() {
 
 export async function canListPath(path: string) {
   try {
-    const response = await fetch(`${apiUrl}/list?path=${encodeURIComponent(path)}`);
+    const response = await fetch(`${API_URL}/list?path=${encodeURIComponent(path)}`);
     return response.ok;
   } catch {
     return false;

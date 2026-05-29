@@ -23,24 +23,6 @@ npm install
 cd ..
 ```
 
-Create the client environment file so the frontend can find the backend:
-
-macOS, Linux, or WSL:
-
-```sh
-cd client
-printf "VITE_API_URL=http://localhost:3001\n" > .env
-```
-
-Windows PowerShell:
-
-```powershell
-cd client
-Set-Content -Path .env -Value "VITE_API_URL=http://localhost:3001"
-```
-
-Restart the frontend dev server after changing `.env`.
-
 ## Run
 
 Start the backend in one terminal:
@@ -97,37 +79,10 @@ The details sidebar shows stable metadata first, then conditional details such a
 If the frontend cannot load folders, check that:
 
 - the backend is running on `http://localhost:3001`
-- `client/.env` contains `VITE_API_URL=http://localhost:3001`
-- the frontend dev server was restarted after editing `.env`
+- the backend terminal does not show an error
+- port `3001` is not already in use by another app
 
-If port `3001` is already in use, start the backend on another port and update `client/.env`.
-
-macOS, Linux, or WSL:
-
-```sh
-cd server
-PORT=3002 npm run dev
-```
-
-```sh
-cd client
-printf "VITE_API_URL=http://localhost:3002\n" > .env
-npm run dev
-```
-
-Windows PowerShell:
-
-```powershell
-cd server
-$env:PORT = "3002"
-npm run dev
-```
-
-```powershell
-cd client
-Set-Content -Path .env -Value "VITE_API_URL=http://localhost:3002"
-npm run dev
-```
+The frontend expects the backend at `http://localhost:3001`.
 
 ## Development Checks
 
